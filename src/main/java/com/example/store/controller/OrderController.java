@@ -8,6 +8,8 @@ import com.example.store.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,13 +23,26 @@ public class OrderController {
     private final OrderMapper orderMapper;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<OrderDTO> getAllOrders() {
-        return orderMapper.ordersToOrderDTOs(orderRepository.findAll());
+        return orderMapper.ordersToOrderDTOs(orderRepository.findAllWithCustomerAndProducts());
+    }
+
+    @GetMapping("/{id}")
+    @Transactional(readOnly = true)
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
+        return orderRepository
+                .findByIdWithCustomerAndProducts(id)
+                .map(orderMapper::orderToOrderDTO)
+                .map(orderDTO -> ResponseEntity.ok(orderDTO))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public OrderDTO createOrder(@RequestBody Order order) {
-        return orderMapper.orderToOrderDTO(orderRepository.save(order));
+        Order savedOrder = orderRepository.save(order);
+        return orderMapper.orderToOrderDTO(savedOrder);
     }
 }

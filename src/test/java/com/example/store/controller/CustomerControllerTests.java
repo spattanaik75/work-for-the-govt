@@ -62,4 +62,22 @@ class CustomerControllerTests {
                 .andExpect(jsonPath("$..name").value("John Doe"));
         ;
     }
+
+    @Test
+    void testGetCustomersByName() throws Exception {
+        when(customerRepository.findByNameContainingIgnoreCase("John")).thenReturn(List.of(customer));
+
+        mockMvc.perform(get("/customer?name=John"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$..name").value("John Doe"));
+    }
+
+    @Test
+    void testGetCustomersByNameEmpty() throws Exception {
+        when(customerRepository.findByNameContainingIgnoreCase("NonExistent")).thenReturn(List.of());
+
+        mockMvc.perform(get("/customer?name=NonExistent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+    }
 }

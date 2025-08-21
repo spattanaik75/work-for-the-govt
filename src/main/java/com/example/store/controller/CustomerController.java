@@ -8,6 +8,7 @@ import com.example.store.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,13 +22,22 @@ public class CustomerController {
     private final CustomerMapper customerMapper;
 
     @GetMapping
-    public List<CustomerDTO> getAllCustomers() {
-        return customerMapper.customersToCustomerDTOs(customerRepository.findAll());
+    @Transactional(readOnly = true)
+    public List<CustomerDTO> getAllCustomers(@RequestParam(required = false) String name) {
+        List<Customer> customers;
+        if (name != null && !name.trim().isEmpty()) {
+            customers = customerRepository.findByNameContainingIgnoreCase(name.trim());
+        } else {
+            customers = customerRepository.findAll();
+        }
+        return customerMapper.customersToCustomerDTOs(customers);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public CustomerDTO createCustomer(@RequestBody Customer customer) {
-        return customerMapper.customerToCustomerDTO(customerRepository.save(customer));
+        Customer savedCustomer = customerRepository.save(customer);
+        return customerMapper.customerToCustomerDTO(savedCustomer);
     }
 }
