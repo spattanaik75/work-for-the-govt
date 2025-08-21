@@ -8,6 +8,7 @@ import com.example.store.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +23,16 @@ public class OrderController {
 
     @GetMapping
     public List<OrderDTO> getAllOrders() {
-        return orderMapper.ordersToOrderDTOs(orderRepository.findAll());
+        return orderMapper.ordersToOrderDTOs(orderRepository.findAllWithCustomerAndProducts());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
+        return orderRepository
+                .findByIdWithCustomerAndProducts(id)
+                .map(orderMapper::orderToOrderDTO)
+                .map(orderDTO -> ResponseEntity.ok(orderDTO))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
