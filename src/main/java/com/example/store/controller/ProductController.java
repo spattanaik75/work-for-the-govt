@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,11 +23,13 @@ public class ProductController {
     private final ProductMapper productMapper;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<ProductDTO> getAllProducts() {
         return productMapper.productsToProductDTOs(productRepository.findAll());
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         return productRepository
                 .findById(id)
@@ -37,7 +40,9 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public ProductDTO createProduct(@RequestBody Product product) {
-        return productMapper.productToProductDTO(productRepository.save(product));
+        Product savedProduct = productRepository.save(product);
+        return productMapper.productToProductDTO(savedProduct);
     }
 }

@@ -8,6 +8,7 @@ import com.example.store.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class CustomerController {
     private final CustomerMapper customerMapper;
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<CustomerDTO> getAllCustomers(@RequestParam(required = false) String name) {
         List<Customer> customers;
         if (name != null && !name.trim().isEmpty()) {
@@ -33,7 +35,9 @@ public class CustomerController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Transactional
     public CustomerDTO createCustomer(@RequestBody Customer customer) {
-        return customerMapper.customerToCustomerDTO(customerRepository.save(customer));
+        Customer savedCustomer = customerRepository.save(customer);
+        return customerMapper.customerToCustomerDTO(savedCustomer);
     }
 }
